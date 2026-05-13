@@ -1,6 +1,8 @@
-# TravelTogether — ICT Architecture Project Context
+# Eindopdracht ICT Architecture — Project Context
 
-> Volledige context-dump voor nieuwe Claude project. Bevat opdracht, beslissingen, alternatieven, deliverables.
+> Volledige context-dump. Bevat opdracht, beslissingen, alternatieven, deliverables. Lokaal bestand, niet committen (staat in .gitignore).
+
+> Repo-naam op disk: `eindopdracht-ict-architecture`.
 
 ---
 
@@ -21,7 +23,6 @@
 >
 > Vergelijkbare voorbeelden: **TripIt**, **Roadtrippers**.
 
-Werknaam intern: **TravelTogether**.
 
 ### Concurrent-analyse (uit eerdere chat)
 - **TripIt** = sterk op Availability + Interoperability (mail/cal sync, multi-device)
@@ -230,7 +231,7 @@ Te bouwen in **Structurizr** (DSL in markdown code block).
 
 | Niveau | Toon |
 |---|---|
-| **Context** | TravelTogether als blackbox + actors (user, admin) + externe systems (Booking.com, Skyscanner, payment provider, email/push providers) |
+| **Context** | App als blackbox + actors (user, admin) + externe systems (Booking.com, Skyscanner, payment provider, email/push providers) |
 | **Container** | Modulaire monoliet als één container + Postgres + Redis + (RabbitMQ) + reverse proxy + mobile/web clients |
 | **Deployment** | Docker Swarm: 3 managers + 2 workers, waar draait wat, volumes, networks |
 
