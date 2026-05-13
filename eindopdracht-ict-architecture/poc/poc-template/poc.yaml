@@ -1,0 +1,22 @@
+version: "3.9"
+
+# Template — pas services aan voor je POC.
+# Deploy: docker stack deploy -f poc.yaml poc
+
+services:
+  app:
+    image: <jouw-org>/<poc-naam>:latest
+    build: ./app
+    ports:
+      - "80:8080"
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: any
+
+# volumes:
+#   data:
+
+# configs:
+#   myconfig:
+#     file: ./config.yaml

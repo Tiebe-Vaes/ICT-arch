@@ -1,0 +1,14 @@
+version: "3.9"
+
+services:
+  app:
+    image: traveltogether/poc1-app:latest
+    build: ./app
+    environment:
+      JWT_SECRET: dev-secret-change-me
+    ports:
+      - "80:8080"
+    deploy:
+      replicas: 3
+      restart_policy:
+        condition: any

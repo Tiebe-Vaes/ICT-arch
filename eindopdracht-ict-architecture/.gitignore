@@ -1,0 +1,64 @@
+# Claude / AI tooling
+.claude/
+CLAUDE.md
+HANDOFF.md
+HANDOFF.*.md
+.aider*
+.cursor/
+.continue/
+*.handoff.md
+project-context.md
+memory/
+
+# Secrets
+*.secret
+*.secret.txt
+secret.txt
+secrets/
+*.pem
+*.key
+*.crt
+.env
+.env.*
+!.env.example
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json.bak
+.pnpm-store/
+
+# Build output
+dist/
+build/
+out/
+*.tsbuildinfo
+
+# Docker / Swarm
+docker-compose.override.yml
+*.local.yml
+
+# Structurizr / C4 exports
+docs/c4/exports/*.png
+docs/c4/exports/*.svg
+!docs/c4/exports/.gitkeep
+.structurizr/
+workspace.json
+
+# IDE / OS
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs / tmp
+*.log
+logs/
+tmp/
+.tmp/
+*.pid

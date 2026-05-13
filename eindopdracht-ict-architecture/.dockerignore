@@ -1,0 +1,50 @@
+# Claude / AI
+.claude/
+CLAUDE.md
+HANDOFF.md
+HANDOFF.*.md
+project-context.md
+memory/
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Docs (niet in image)
+docs/
+README.md
+*.md
+
+# Secrets (nooit in image)
+*.secret
+*.secret.txt
+secret.txt
+secrets/
+*.pem
+*.key
+.env
+.env.*
+
+# Node
+node_modules/
+npm-debug.log*
+.pnpm-store/
+
+# Build
+dist/
+build/
+out/
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+desktop.ini
+*.swp
+
+# Logs
+*.log
+logs/
+tmp/
