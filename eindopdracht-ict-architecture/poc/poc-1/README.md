@@ -14,7 +14,7 @@ GitHub OAuth (Authorization Code flow). Snelste setup, geen verification nodig v
 Productie-richting: zelfde flow met Google of self-hosted IdP, alleen endpoints wisselen.
 
 ## Run (fase 1, lokaal)
-
+  
 ```bash
 cd app
 npm install
@@ -37,7 +37,7 @@ curl http://localhost:8080/me -H "Authorization: Bearer <JWT>"
 ## Demo fase 2 (scaling)
 
 ```bash
-docker stack deploy -c poc.yaml poc1
+docker stack deploy -f poc.yaml poc
 # zelfde JWT, 10 requests, verdeeld over 3 replicas
 for i in {1..10}; do curl -s http://localhost/me -H "Authorization: Bearer <JWT>"; done
 ```
