@@ -2,13 +2,35 @@ version: "3.9"
 
 services:
   app:
-    image: eindopdracht/poc1-app:latest
+    image: poc1-app:latest
     build: ./app
+    hostname: "replica-{{.Task.Slot}}"
     environment:
-      JWT_SECRET: dev-secret-change-me
+      PORT: 8080
+      CALLBACK_URL: http://localhost:8080/callback
+      REDIS_URL: redis://redis:6379
+    secrets:
+      - github_client_id
+      - github_client_secret
+      - jwt_secret
     ports:
-      - "80:8080"
+      - "8080:8080"
     deploy:
       replicas: 3
       restart_policy:
         condition: any
+
+  redis:
+    image: redis:7-alpine
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: any
+
+secrets:
+  github_client_id:
+    external: true
+  github_client_secret:
+    external: true
+  jwt_secret:
+    external: true
