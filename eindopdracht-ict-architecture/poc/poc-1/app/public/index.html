@@ -24,9 +24,8 @@
 
   <div class="row">
     <button id="me">Call /me</button>
-    <button id="logout">Logout (revoke)</button>
     <button id="clear">Clear token</button>
-    <small>fires: <code>GET /me</code> of <code>POST /logout</code> met Bearer</small>
+    <small>fires: <code>fetch('/me', {headers: {Authorization: 'Bearer &lt;jwt&gt;'}})</code></small>
   </div>
 
   <div class="row">
@@ -68,14 +67,6 @@
       const r = await fetch('/me', { headers: { Authorization: 'Bearer ' + jwt } });
       const body = await r.text();
       resBox.textContent = `${r.status} ${r.statusText}\n\n${body}`;
-    };
-
-    document.getElementById('logout').onclick = async () => {
-      const jwt = localStorage.getItem('jwt');
-      if (!jwt) { resBox.textContent = 'No token.'; return; }
-      reqBox.textContent = `POST /logout\nAuthorization: Bearer ${jwt}`;
-      const r = await fetch('/logout', { method: 'POST', headers: { Authorization: 'Bearer ' + jwt } });
-      resBox.textContent = `${r.status} ${r.statusText}\n\n${await r.text()}\n\n(token nog in localStorage - probeer /me opnieuw)`;
     };
 
     document.getElementById('clear').onclick = () => {
