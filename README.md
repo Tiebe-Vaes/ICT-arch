@@ -31,7 +31,7 @@ ICT arch/
 | POC | Onderwerp | Linkt naar ADR |
 |---|---|---|
 | 1 | OAuth login (fase 1) + JWT scaling (fase 2) - GitHub provider | ADR-003 auth, ADR-006 deployment |
-| 2 | 
+| 2 | Caching van reis- en hoteldata | ADR-005 performance, ADR-007 external integrations
 | 3 | 
 | 4 | 
 | 5 | 
