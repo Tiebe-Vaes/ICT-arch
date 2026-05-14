@@ -1,0 +1,23 @@
+version: "3.9"
+
+# Template — pas services aan voor je POC.
+# Deploy: docker stack deploy -f poc.yaml poc
+
+services:
+  redis:
+    image: redis
+
+  mock-api:
+    image: poc-mock-api
+
+  travel-services:
+    image: poc-travel-service
+    ports:
+      - "8080:8080"
+
+# volumes:
+#   data:
+
+# configs:
+#   myconfig:
+#     file: ./config.yaml
