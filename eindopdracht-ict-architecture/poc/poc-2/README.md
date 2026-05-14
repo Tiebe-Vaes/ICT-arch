@@ -1,34 +1,49 @@
-# POC X — <naam>
+# POC 2 — Redis Caching van reisgegevens
 
-Template voor een POC. Kopieer deze map, hernoem naar je POC-nummer en pas inhoud aan.
 
 ## Doel
-Welke vraag beantwoordt deze POC? Welke quality attribute(s) bewijst hij?
+Deze POC gebruikt redis caching om veelgebruikte reisgegevens sneller beschikbaar te maken en de belasting op externe diensten te verminderen.
 
 **Quality attributes:** ...
+- Performance 
+- Availability
+- Resilience
 
 ## Stack
-Korte opsomming containers/images.
+- Travel Service (Node.js + Express)
+- Redis (cache)
+- Mock Travel API (externe dienst met trage response)
+- Docker Swarm
 
 ## Run
 ```bash
+docker swarm init
+docker build -t poc-travel-service ./travel-service
+docker build -t poc-mock-api ./mock-api
 docker stack deploy -f poc.yaml poc
 ```
 
 ## Demo
 ```bash
-# Stap 1 — basisgedrag tonen
-curl ...
+# Stap 1 — basisgedrag tonen (cache miss)
+curl http://localhost:8080/trip/1
 
-# Stap 2 — edge case / faalscenario
-docker service scale ...
+# Stap 2 — edge case (cache werkt)
+curl http://localhost:8080/trip/1
 
-# Stap 3 — verifieer gedrag
-docker service logs poc_<service>
+# Stap 3 — faalscenario (externe API down)
+docker service scale poc_mock-api=0
+curl http://localhost:8080/trip/1
+
+# Logs
+docker service logs poc_travel-service
 ```
 
 ## Resultaat
-Wat zou je moeten zien? Welke conclusie trek je?
+De POC toont aan dat caching:
+- de responstijd verlaagt bij herhaalde requests
+- de load op externe diensten vermindert
+- het system blijft beschikbaar bij uitval van externe API's
 
 ## Cleanup
 ```bash
