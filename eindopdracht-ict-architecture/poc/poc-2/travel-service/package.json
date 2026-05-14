@@ -1,0 +1,7 @@
+{
+  "name": "travel-service",
+  "dependencies": {
+    "express": "^5.2.1",
+    "redis": "^5.12.1"
+  }
+}
