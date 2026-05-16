@@ -1,0 +1,36 @@
+version: "3.8"
+
+services:
+
+  mock-hotel-api:
+    image: poc-mock-hotel-api
+    build:
+      context: ./mock-hotel-api
+    environment:
+      # Change this to demonstrate different failure scenarios:
+      #   none     → always responds normally
+      #   flaky    → 40% chance of timeout
+      #   timeout  → always times out
+      #   error    → always returns HTTP 500
+      FAILURE_MODE: "none"
+    ports:
+      - "3000:3000"
+    deploy:
+      replicas: 1
+      placement:
+        constraints: [node.role == manager]
+
+  integration-service:
+    image: poc-integration-service
+    build:
+      context: ./integration-service
+    environment:
+      HOTEL_API_URL: "http://mock-hotel-api:3000"
+    ports:
+      - "5000:5000"
+    depends_on:
+      - mock-hotel-api
+    deploy:
+      replicas: 1
+      placement:
+        constraints: [node.role == manager]
