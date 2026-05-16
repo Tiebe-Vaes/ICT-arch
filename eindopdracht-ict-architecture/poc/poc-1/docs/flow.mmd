@@ -1,0 +1,26 @@
+sequenceDiagram
+    autonumber
+    participant B as Browser
+    participant A as poc1-app
+    participant GH as GitHub OAuth
+
+    B->>A: GET /login
+    A->>A: state = random16 (cookie)
+    A-->>B: 302 github.com/authorize?state=...
+
+    B->>GH: login + consent
+    GH-->>B: 302 /callback?code&state
+
+    B->>A: GET /callback (+ state cookie)
+    A->>A: verify state == cookie
+    A->>GH: POST /access_token (code + client_secret)
+    GH-->>A: access_token
+    A->>GH: GET /user
+    GH-->>A: {login, name}
+    A->>A: jwt.sign(payload, JWT_SECRET, 1h)
+    A-->>B: 302 /?token=JWT
+    Note over B: JWT in localStorage
+
+    B->>A: GET /me  Authorization: Bearer JWT
+    A->>A: jwt.verify(JWT_SECRET)
+    A-->>B: {user, name}

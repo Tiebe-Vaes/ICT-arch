@@ -230,3 +230,4 @@ Bij een kleiner team en kleiner budget zou de keuze een niet-modulaire monoliet 
 - p95 latency van kritieke endpoints onder 300 ms
 - Geen circulaire afhankelijkheden tussen modules na 3 maanden
 - Heroverweging op het einde van de eerste productie-iteratie: blijft modulaire monoliet houdbaar, of is afsplitsing nodig?
+
