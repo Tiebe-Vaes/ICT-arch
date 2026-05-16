@@ -19,13 +19,16 @@ Vul eerst `app/.env` in:
 cp app/.env.example app/.env   # zet GITHUB_CLIENT_ID en _SECRET
 ```
 
-Deploy op Docker Swarm:
+Bouw image en deploy op Docker Swarm:
 
-```powershell
-.\deploy.ps1
+```bash
+docker build -t poc1-app:latest ./app
+docker stack deploy -f poc.yaml poc
 ```
 
-Het script init swarm indien nodig, bouwt het image en deployt de stack. De stack leest `app/.env` rechtstreeks via `env_file`.
+De stack leest `app/.env` rechtstreeks via `env_file`.
+
+Optioneel handig op Windows: `.\deploy.ps1` doet beide stappen (en init swarm indien nodig).
 
 Open http://localhost:8080.
 
