@@ -1,0 +1,14 @@
+{
+  "name": "poc3-rabbitmq-messaging",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "api": "node src/api.js",
+    "notification-worker": "node src/workers/notificationWorker.js",
+    "audit-worker": "node src/workers/auditWorker.js"
+  },
+  "dependencies": {
+    "amqplib": "^0.10.4",
+    "express": "^4.19.2"
+  }
+}

@@ -1,0 +1,45 @@
+services:
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: poc3-rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  trip-api:
+    build: ./app
+    container_name: poc3-trip-api
+    command: npm run api
+    environment:
+      RABBITMQ_URL: amqp://rabbitmq:5672
+      PORT: 8080
+    ports:
+      - "8080:8080"
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+
+  notification-worker:
+    build: ./app
+    container_name: poc3-notification-worker
+    command: npm run notification-worker
+    environment:
+      RABBITMQ_URL: amqp://rabbitmq:5672
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+
+  audit-worker:
+    build: ./app
+    container_name: poc3-audit-worker
+    command: npm run audit-worker
+    environment:
+      RABBITMQ_URL: amqp://rabbitmq:5672
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
