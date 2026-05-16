@@ -113,8 +113,6 @@ Negatief:
 ## Related Decisions
 
 - ADR-001 (Modulaire monoliet)
-- ADR-006 (Deployment — JWT past bij replica's)
-- ADR-007 (Frontend — token-opslag)
 
 ## Validation
 
