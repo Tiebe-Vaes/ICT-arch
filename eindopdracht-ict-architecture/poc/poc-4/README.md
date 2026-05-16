@@ -1,10 +1,11 @@
-# POC 3 — PostgreSQL Concurrent Budget Updates
+# POC 4 — PostgreSQL concurrent budget updates
 
-## Doel
+## Hypothese
 
-Deze proof of concept onderzoekt hoe PostgreSQL transacties en locking-mechanismen gebruikt kunnen worden om consistente budgetdata te garanderen wanneer meerdere gebruikers gelijktijdig wijzigingen uitvoeren aan hetzelfde reisbudget.
-
-De POC demonstreert hoe PostgreSQL race conditions en verloren updates voorkomt via transacties en row-level locking.
+Wanneer meerdere gebruikers gelijktijdig hetzelfde reisbudget aanpassen, kan een standaard
+PostgreSQL-transactie zonder expliciete locking leiden tot een lost update: de tweede transactie
+overschrijft de wijziging van de eerste. Een SELECT ... FOR UPDATE voorkomt dit door de rij te
+vergrendelen totdat de eerste transactie afgerond is.
 
 **Quality attributes:**
 - Data Consistency
@@ -15,17 +16,41 @@ De POC demonstreert hoe PostgreSQL race conditions en verloren updates voorkomt 
 ## Stack
 
 - PostgreSQL 15
+- Node.js 20 (pg driver)
 - Docker Swarm
 
 ---
 
-## Run
+## Structuur
 
-```bash
-docker stack deploy -c poc.yaml poc
+```
+poc-03-db-locking/
+  app/
+    index.js        -- simuleert gelijktijdige budget-updates
+    package.json
+  Dockerfile
+  init.sql          -- tabelstructuur en begindata
+  poc.yaml          -- Swarm stack
+  README.md
 ```
 
-Controleer of de service draait:
+---
+
+## Bouwen en opstarten
+
+Bouw het image op een Swarm manager-node:
+
+```bash
+docker build -t poc-04-app .
+```
+
+Start de stack:
+
+```bash
+docker stack deploy -f poc.yaml poc
+```
+
+Controleer of beide services draaien:
 
 ```bash
 docker service ls
@@ -35,69 +60,55 @@ docker service ls
 
 ## Demo
 
-### Stap 1 — open eerste databaseverbinding
+De app voert twee scenario's automatisch uit bij het opstarten.
 
-Open een terminal en voer uit:
-
-```bash
-docker exec -it $(docker ps -q -f name=poc_db) psql -U postgres -d budgetdb
-```
-
-Start een transactie en voer een update uit:
-
-```sql
-BEGIN;
-
-UPDATE budget
-SET uitgegeven_budget = uitgegeven_budget + 100
-WHERE id = 1;
-```
-
-Voer nog geen `COMMIT` uit.
-
----
-
-### Stap 2 — open tweede databaseverbinding
-
-Open een tweede terminal en voer opnieuw uit:
+Bekijk de output via:
 
 ```bash
-docker exec -it $(docker ps -q -f name=poc_db) psql -U postgres -d budgetdb
+docker service logs poc_app
 ```
 
-Voer een tweede update uit:
+### Scenario 1 — zonder FOR UPDATE (lost update)
 
-```sql
-BEGIN;
+Beide transacties lezen de beginwaarde (0) voordat een van beide schrijft.
+Transactie B overschrijft de wijziging van transactie A.
+Het resultaat is 50 of 100 in plaats van het correcte 150.
 
-UPDATE budget
-SET uitgegeven_budget = uitgegeven_budget + 50
-WHERE id = 1;
+### Scenario 2 — met FOR UPDATE (correct)
+
+De SELECT ... FOR UPDATE vergrendelt de rij na het lezen.
+Transactie B wacht totdat transactie A gecommit heeft.
+Het resultaat is altijd 150.
+
+### Verwachte output
+
 ```
+=== Scenario 1: without FOR UPDATE (lost update) ===
+Starting value: 0
+[User A] Read: 0
+[User B] Read: 0
+[User A] Write: 100
+[User B] Write: 50
+Result: 50
+Expected: 150 -- Correct: false
 
-Deze query zal wachten totdat de eerste transactie afgerond is.
+=== Scenario 2: with FOR UPDATE (correct) ===
+Starting value: 0
+[User A] Read (locked): 0
+[User A] Write: 100
+[User B] Read (locked): 100
+[User B] Write: 150
+Result: 150
+Expected: 150 -- Correct: true
+```
 
 ---
 
-### Stap 3 — voltooi de eerste transactie
+## Conclusie
 
-Ga terug naar terminal 1 en voer uit:
-
-```sql
-COMMIT;
-```
-
-Daarna zal de tweede transactie verder uitgevoerd worden.
-
----
-
-## Resultaat
-
-De tweede transactie wordt tijdelijk geblokkeerd totdat de eerste transactie afgerond is.
-
-Hierdoor voorkomt PostgreSQL conflicterende gelijktijdige wijzigingen op hetzelfde budgetrecord.
-
-Deze POC toont aan dat PostgreSQL transacties en row-level locking consistente gedeelde budgetdata kunnen garanderen binnen een collaboratieve reisapplicatie waarin meerdere gebruikers gelijktijdig hetzelfde reisbudget aanpassen.
+Een standaard transactie zonder expliciete locking volstaat niet voor gelijktijdige
+budgetupdates. SELECT ... FOR UPDATE garandeert dat elke transactie de meest recente
+waarde leest en dat updates niet verloren gaan.
 
 ---
 
