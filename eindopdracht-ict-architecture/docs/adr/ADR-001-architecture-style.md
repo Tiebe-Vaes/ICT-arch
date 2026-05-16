@@ -1,232 +1,106 @@
 # ADR-001 — Keuze van architecturale stijl
 
-Formaat gebaseerd op MADR (Markdown Architectural Decision Records), versie 3.0.
-Referentie: https://adr.github.io/madr/
+Formaat: [MADR 3.0](https://adr.github.io/madr/). Lokale template: [`template.md`](template.md).
 
 ## Status
 
 Proposed
 
-## Context and Problem Statement
+## Context
 
-De applicatie is een platform voor het plannen en delen van reizen met vrienden, met gedeeld budgetbeheer, activiteitenplanning en integraties met externe diensten (hotels, vluchten, payment providers). Het team bestaat uit 5 personen en moet binnen 6 maanden een productieklare versie opleveren.
+De applicatie is een platform om reizen te plannen en te delen met vrienden, met gedeeld budgetbeheer, activiteitenplanning en integraties met externe diensten zoals hotels, vluchten en payment providers. Het team telt vijf personen en heeft zes maanden om een productieklare versie op te leveren. De testcluster is een Docker Swarm met drie managers en twee workers, het budget voor managed services is beperkt.
 
-Welke architecturale stijl past het beste bij de combinatie van functionele scope, niet-functionele eisen en de constraints van het team?
+De vraag is simpel: welke architecturale stijl past het beste bij deze combinatie van functionele scope, de zeven karakteristieken uit hoofdstuk 1 en de constraints van het team?
 
-Niet-functionele eisen (zie `docs/characteristics.md`):
+## Wat de keuze stuurt
 
-1. Availability
-2. Confidentiality
-3. Interoperability
-4. Fault Tolerance
-5. Latency
-6. Data Consistency
-7. Scalability
+De zwaarste driver is **Data Consistency**: gedeeld budget tussen vrienden mag geen ruimte laten voor verloren updates of onduidelijke saldo's. Daarna komen **time-to-market** (zes maanden, vijf mensen) en **beheersbare operationele complexiteit** (geen dedicated DevOps). Daaronder volgen Scalability voor vakantiepieken, Fault Tolerance bij externe API's, en een redelijk migratiepad voor het geval de applicatie later toch fijnmaziger moet.
 
-Constraints:
+## Overwogen opties
 
-- Team van 5, gemengde seniority
-- 6 maanden tot productie
-- Deploy op Docker Swarm testcluster (3 managers + 2 workers)
-- Beperkt budget voor cloud-managed diensten
+Alle stijlen uit de cursus zijn beoordeeld:
 
-## Decision Drivers
-
-Gerangschikt naar gewicht:
-
-1. Time-to-market binnen 6 maanden met een team van 5
-2. Beheersbare operationele complexiteit (geen dedicated DevOps)
-3. Sterke Data Consistency voor gedeeld budget (vermijden van eventual-consistency-bugs)
-4. Schaalbaarheid voor vakantiepieken
-5. Fault tolerance bij uitval van externe API's
-6. Migratiepad naar fijnmaziger architectuur indien later nodig
-
-## Considered Options
-
-Alle stijlen die in de les behandeld zijn of nog behandeld zullen worden:
-
-1. Monoliet (klassiek, niet-modulair)
-2. Layered architecture
-3. Modulaire Monoliet
+1. Klassieke monoliet
+2. Layered
+3. Modulaire monoliet
 4. Microservices
-5. Event-Driven Architecture
-6. Space-Based Architecture
+5. Event-driven architecture
+6. Space-based
 7. Microkernel (plug-in)
-8. Service-Oriented Architecture (SOA)
+8. SOA
 9. Pipeline (pipes and filters)
 10. Serverless (FaaS)
 
-## Decision Outcome
+## Beslissing
 
-Gekozen: Modulaire Monoliet.
-Tweede keuze: Microservices met event-driven communicatie.
+We kiezen voor een **modulaire monoliet**. Tweede keuze is **microservices met event-driven communicatie**.
 
-### Motivatie
+Een modulaire monoliet geeft de eenvoud van een monoliet — één database, één deploybare unit, ACID out-of-the-box — terwijl strikte module-grenzen later toelaten om delen af te splitsen. Voor een team van vijf binnen zes maanden is dat het laagste-risico-pad. Microservices sluiten conceptueel beter aan bij Scalability en Fault Tolerance, maar de operationele overhead (service mesh, distributed tracing, saga's voor budget-consistency, deployment-orchestratie) overbelast deze teamgrootte binnen dit tijdsbestek. Bij een groter team of meer runway zou microservices de eerste keuze zijn.
 
-Een modulaire monoliet geeft de operationele eenvoud van een monoliet, terwijl strikte module-grenzen (afgedwongen via package-structuur en tests zoals ArchUnit) een latere splitsing naar microservices mogelijk maken. Voor een team van 5 dat binnen 6 maanden moet leveren is dit het laagste-risico-pad: één deploybare unit, één database, ACID-transacties out-of-the-box (kritiek voor gedeeld budget), geen netwerklatency tussen modules.
+## Analyse per stijl
 
-Microservices zijn de tweede keuze omdat ze conceptueel beter aansluiten bij de quality attributes (per-component schalen, fout-isolatie), maar de operationele overhead (service mesh, distributed tracing, eventual consistency, deployment-orchestratie) een team van deze grootte binnen deze tijdspanne overbelast. Indien het team groter was geweest of de productionisatie-deadline ruimer, zou microservices de eerste keuze zijn.
+### Klassieke monoliet
 
-## Pros and Cons of the Options
+Eenvoudig te deployen en te debuggen, één codebase. Maar zonder interne grenzen glijdt zo'n project bij deze omvang snel af naar een ongestructureerde codebase, zonder voorbereiding op opsplitsing. Verworpen wegens te weinig discipline op lange termijn.
 
-### 1. Monoliet (klassiek)
+### Layered
 
-Pro:
-- Simpelste deployment
-- Eén codebase, eenvoudig debuggen
+De klassieke scheiding tussen presentation, business en data is bekend bij iedereen, maar lost het grens-probleem tussen domeinen niet op: features snijden verticaal door alle lagen heen en koppeling tussen domeinen blijft. Niet geschikt als hoofdstijl, wel bruikbaar als interne structuur binnen modules.
 
-Con:
-- Geen interne grenzen, leidt op termijn tot ongestructureerde codebase
-- Geen voorbereiding op opsplitsing
-- Verworpen: te weinig discipline voor een project van deze omvang
+### Modulaire monoliet (gekozen)
 
-### 2. Layered
+Behoudt de operationele eenvoud van een monoliet maar voegt expliciete module-grenzen toe. ACID-transacties binnen één database lossen het kernprobleem op (budget-splits), geen netwerklatency tussen modules, snelle ontwikkelcyclus. De prijs: heel de app schaalt mee bij piek in één module, één falende module kan alles meeslepen, en de grenzen moeten actief bewaakt worden — anders zakt het terug naar een klassieke monoliet.
 
-Pro:
-- Klassieke separation of concerns (presentation, business, data)
-- Bekend bij elke ontwikkelaar
+### Microservices (tweede keuze)
 
-Con:
-- Verticale doorsneden door alle lagen bij elke feature (anemic-model risico)
-- Voorkomt geen koppeling tussen domeinen
-- Verworpen: lost het schaal- en grens-probleem niet op; kan wel intern in modules toegepast worden
+Per-service schalen, fout-isolatie, technologische vrijheid, onafhankelijke deployments. Op papier de beste fit voor Scalability en Fault Tolerance. In de praktijk vergt het discovery, tracing, monitoring, een gateway, secret-management en saga's voor cross-service consistency. Voor budget-splits over services moet je expliciet patronen als Saga of Outbox introduceren — foutgevoelig en operationeel zwaar. Te veel voor vijf mensen in zes maanden.
 
-### 3. Modulaire Monoliet (gekozen)
+### Event-driven
 
-Pro:
-- Lage operationele complexiteit, één artifact
-- Strikte module-grenzen, voorbereiding op latere splitsing
-- ACID-transacties binnen één database, ideaal voor budget-splits (Data Consistency)
-- Geen netwerklatency tussen modules
-- Snelle Time-to-Market
+Maximale ontkoppeling en goede pasvorm voor notificaties en integraties, maar volledig event-gedreven kernlogica maakt budget-consistency erg lastig en monitoring complex. We zetten event-driven wél gericht in voor asynchrone side effects via RabbitMQ (zie ADR-005), maar niet als hoofdstijl.
 
-Con:
-- Schaalbaarheid alleen voor de hele app, niet per module
-- Vaste tech-stack voor alle modules
-- Module-grenzen moeten actief bewaakt worden (boundary tests, code review)
-- Eén falende module kan de hele app neerhalen
+### Space-based
 
-### 4. Microservices (tweede keuze)
+Ontworpen voor extreme concurrent loads zonder centrale database als bottleneck, met een data-grid. Voor onze verwachte load is dat overkill, en de complexiteit van cache-coherence rechtvaardigt de keuze niet.
 
-Pro:
-- Per-service schalen, sluit goed aan bij Scalability-driver
-- Fout-isolatie (Fault Tolerance)
-- Tech-vrijheid per service
-- Onafhankelijke deployments per team
+### Microkernel (plug-in)
 
-Con:
-- Hoge operationele overhead: service discovery, tracing, monitoring, secrets, gateway
-- Eventual consistency vereist saga-patterns voor budget-splits, foutgevoelig
-- Network latency tussen services
-- Te zwaar voor team van 5 in 6 maanden
+Past bij productlijnen met variabele uitbreidingen rond een stabiele kern. Onze externe integraties zijn beter gediend met een Anti-Corruption Layer (zie ADR-004) dan met een plug-in-model. Verworpen: de kern van de app is geen producthost.
 
-### 5. Event-Driven
+### SOA
 
-Pro:
-- Sterke decoupling, schaalbaar bij hoge throughput
-- Natuurlijke fit voor notificaties en async integraties
+Onafhankelijke services rond business-capabilities, vaak gekoppeld aan een enterprise service bus. In de praktijk is dit grotendeels overgenomen en verfijnd door microservices, met betere moderne tooling. Verworpen als zwaardere variant van microservices.
 
-Con:
-- Volledig event-gedreven kernlogica maakt budget-consistency complex
-- Debug- en traceability-uitdaging
-- Verworpen als hoofdstijl; wordt wel intern ingezet voor notificaties en integraties (ADR-005)
+### Pipeline (pipes and filters)
 
-### 6. Space-Based
+Sterk voor sequentiële datatransformaties, maar de domeinlogica hier is interactief en transactioneel, geen verwerkingspijplijn. Niet passend.
 
-Pro:
-- Extreme schaalbaarheid, geen centrale database als bottleneck
-- Geschikt voor extreem hoge concurrent loads
+### Serverless (FaaS)
 
-Con:
-- Overkill voor verwachte load
-- Complexe data-grid en cache-coherence
-- Verworpen: niet gerechtvaardigd door eisen
+Geen infrastructuurbeheer en automatische scaling klinken aantrekkelijk, maar de opgelegde Docker Swarm-deployment maakt FaaS irrelevant, naast cold starts en vendor-lock-in.
 
-### 7. Microkernel (plug-in)
+## Gevolgen
 
-Pro:
-- Goede pasvorm voor productlijnen met variabele uitbreidingen
-- Stabiele kern, plug-ins voor variatie
+Aan de positieve kant: een werkend product binnen zes maanden, lage infrastructuurkost, ACID-transacties die budget-splits beschermen, en een duidelijk migratiepad — modules kunnen later afgesplitst worden naar services indien nodig.
 
-Con:
-- Onze externe integraties zijn beter af met een Anti-Corruption Layer (ADR-004) dan met een plug-in-model
-- Verworpen: kern van de app is geen producthost
+Aan de negatieve kant: bij forse groei moet er gemigreerd worden naar microservices, wat geen gratis stap is. De hele app schaalt mee, ook als enkel zoek piek heeft. En zonder discipline (boundary-tests in CI) glijdt de codebase af naar een big ball of mud.
 
-### 8. SOA
+## Implementatie
 
-Pro:
-- Onafhankelijke services rond business-capabilities
-- Hergebruik over de organisatie
+Eén deploybare backend in Node.js met expliciete modules: User & Auth, Trip, Budget, Planning, Integration (ACL), Notification, Audit. Module-boundary-tests in CI. PostgreSQL als primaire opslag (ADR-004), Redis als cache (ADR-002), RabbitMQ voor asynchrone side effects (ADR-005). Anti-Corruption Layer per externe partner. Deployment op Docker Swarm met Traefik als ingress.
 
-Con:
-- Vaak gekoppeld aan enterprise service bus, te zwaar voor één applicatie
-- In de praktijk overgenomen en verfijnd door microservices
-- Verworpen: zwaardere variant van microservices zonder de moderne tooling
+## Reflectie op team en budget
 
-### 9. Pipeline (pipes and filters)
+Met een groter team en groter budget zou de keuze van bij dag één microservices zijn, met service mesh, multi-region en Kafka als event-backbone. Met een kleiner team en kleiner budget zou het een niet-modulaire monoliet op één VPS worden, zonder event-bus en zonder cache, omdat zelfs modulaire discipline dan een te hoge prijs heeft.
 
-Pro:
-- Geschikt voor sequentiële datatransformaties
+## Gerelateerd
 
-Con:
-- De domeinlogica is niet primair een transformatie-pipeline
-- Verworpen: past niet bij een interactieve, transactionele applicatie
+- [ADR-002](ADR-002-caching.md) — Caching
+- [ADR-003](ADR-003-authentication.md) — Authenticatie
+- [ADR-004](ADR-004-database.md) — Database
+- [ADR-005](ADR-005-messaging-system.md) — Messaging
+- [ADR-006](ADR-006-poc5.md) — Onderwerp POC 5
 
-### 10. Serverless (FaaS)
+## Validatie
 
-Pro:
-- Geen infrastructuurbeheer, automatische scaling
-- Pay-per-use bij lage load
-
-Con:
-- Vendor-lock-in
-- Cold starts, latency-piek bij intermitterend gebruik
-- Past slecht bij de opgelegde Docker Swarm-deployment
-- Verworpen: conflicteert met de constraint over deploybare stack
-
-## Consequences
-
-Positief:
-
-- Snel werkend product binnen 6 maanden
-- Lage infrastructuurkost en operationele last
-- ACID-transacties beschermen budget-splits tegen eventual-consistency-bugs
-- Migratiepad: modules kunnen later afgesplitst worden naar services indien nodig
-
-Negatief:
-
-- Bij forse groei moet er gemigreerd worden naar microservices, niet gratis
-- Hele app schaalt mee zelfs als enkel Search piek heeft
-- Module-grenzen vereisen discipline; zonder tests glijdt de codebase richting big ball of mud
-
-## Implementation Notes
-
-- Eén deploybare backend (bijvoorbeeld Spring Boot of .NET) met expliciete modules: User, Trip, Budget, Integration (ACL), Planning, Notification
-- Module-boundary tests (ArchUnit of equivalent) in CI
-- PostgreSQL als primaire opslag, Redis als cache
-- RabbitMQ voor async notificaties en achtergrondtaken (zie ADR-005)
-- Anti-Corruption Layer per externe partner (ADR-004)
-- Deployment op Docker Swarm (ADR-006), Traefik als ingress
-
-## Reflectie team en budget
-
-Bij een groter team en groter budget zou de keuze van bij dag één microservices zijn, met service mesh, multi-region setup en Kafka als event-backbone.
-
-Bij een kleiner team en kleiner budget zou de keuze een niet-modulaire monoliet op één VPS zijn, zonder event-bus en zonder cache, omdat zelfs de modulaire discipline dan een te hoge kost zou zijn.
-
-## Related Decisions
-
-- ADR-002 (Database)
-- ADR-003 (Authenticatie)
-- ADR-004 (Externe API-integratie)
-- ADR-005 (Messaging)
-- ADR-006 (Deployment)
-- ADR-007 (Frontend)
-
-## Validation
-
-- Module-boundary tests slagen in CI
-- Deploy-tijd van een nieuwe versie blijft onder 5 minuten
-- p95 latency van kritieke endpoints onder 300 ms
-- Geen circulaire afhankelijkheden tussen modules na 3 maanden
-- Heroverweging op het einde van de eerste productie-iteratie: blijft modulaire monoliet houdbaar, of is afsplitsing nodig?
+We hertoetsen deze beslissing op het einde van de eerste productie-iteratie. Concreet bekijken we of de module-boundary-tests blijven slagen, of de deploy-tijd onder vijf minuten blijft, of de p95 latency van kritieke endpoints onder driehonderd milliseconde zit, en of er na drie maanden geen circulaire afhankelijkheden tussen modules zijn ontstaan. Indien een module structureel piek-load veroorzaakt of een eigen schaalprofiel nodig heeft, bekijken we afsplitsing naar een service.

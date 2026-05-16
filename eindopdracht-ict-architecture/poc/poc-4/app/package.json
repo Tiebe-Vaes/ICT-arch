@@ -1,0 +1,12 @@
+{
+  "name": "poc-03-db-locking",
+  "version": "1.0.0",
+  "description": "POC: PostgreSQL row-level locking for concurrent budget updates",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "pg": "^8.11.0"
+  }
+}

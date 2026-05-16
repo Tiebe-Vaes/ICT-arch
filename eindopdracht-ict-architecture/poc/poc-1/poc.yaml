@@ -4,25 +4,7 @@ services:
   app:
     image: poc1-app:latest
     build: ./app
-    hostname: "replica-{{.Task.Slot}}"
-    environment:
-      PORT: 8080
-      CALLBACK_URL: http://localhost:8080/callback
-    secrets:
-      - github_client_id
-      - github_client_secret
-      - jwt_secret
+    env_file:
+      - ./app/.env
     ports:
       - "8080:8080"
-    deploy:
-      replicas: 3
-      restart_policy:
-        condition: any
-
-secrets:
-  github_client_id:
-    external: true
-  github_client_secret:
-    external: true
-  jwt_secret:
-    external: true

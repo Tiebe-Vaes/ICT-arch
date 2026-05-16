@@ -8,10 +8,19 @@ Welke vraag beantwoordt deze POC? Welke quality attribute(s) bewijst hij?
 **Quality attributes:** ...
 
 ## Stack
-Korte opsomming containers/images.
+Korte opsomming van technologieën / containers.
 
 ## Run
+Kies wat past bij je POC (lokaal, Compose of Swarm):
+
 ```bash
+# lokaal
+npm install && npm start
+
+# of Docker Compose
+docker compose up --build
+
+# of Docker Swarm
 docker stack deploy -f poc.yaml poc
 ```
 
@@ -21,10 +30,10 @@ docker stack deploy -f poc.yaml poc
 curl ...
 
 # Stap 2 — edge case / faalscenario
-docker service scale ...
+...
 
 # Stap 3 — verifieer gedrag
-docker service logs poc_<service>
+...
 ```
 
 ## Resultaat
@@ -32,5 +41,8 @@ Wat zou je moeten zien? Welke conclusie trek je?
 
 ## Cleanup
 ```bash
+# afhankelijk van runtime
+docker compose down -v
+# of
 docker stack rm poc
 ```
