@@ -1,0 +1,10 @@
+version: "3.9"
+
+services:
+  app:
+    image: poc1-app:latest
+    build: ./app
+    env_file:
+      - ./app/.env
+    ports:
+      - "8080:8080"

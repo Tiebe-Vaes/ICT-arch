@@ -13,12 +13,19 @@ Productie-richting: zelfde flow met Google of self-hosted IdP, alleen endpoints 
 
 ## Run
 
+Vul eerst `app/.env` in:
+
 ```bash
-cd app
-cp .env.example .env   # vul GITHUB_CLIENT_ID en _SECRET in
-npm install
-npm start
+cp app/.env.example app/.env   # zet GITHUB_CLIENT_ID en _SECRET
 ```
+
+Deploy op Docker Swarm:
+
+```powershell
+.\deploy.ps1
+```
+
+Het script init swarm indien nodig, bouwt het image en deployt de stack. De stack leest `app/.env` rechtstreeks via `env_file`.
 
 Open http://localhost:8080.
 
@@ -38,3 +45,9 @@ curl http://localhost:8080/me -H "Authorization: Bearer <JWT>"
 ## Resultaat
 
 Gebruiker authenticeert via externe provider. De app slaat geen wachtwoorden op en gebruikt enkel een eigen JWT als sessie-token.
+
+## Cleanup
+
+```bash
+docker stack rm poc
+```

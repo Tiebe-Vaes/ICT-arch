@@ -9,21 +9,24 @@ App-case: planning en delen van reizen met vrienden (budget, activiteiten, integ
 - `docs/characteristics.md` — 7 quality attributes + motivatie
 - `docs/logical-components.md` — logische componenten (actor-action)
 - `docs/adr/` — ADR's (MADR-formaat)
-- `docs/c4/diagrams.dsl` — Structurizr DSL (Context, Container, Deployment)
-- `poc/` — 5 deploybare POC's
+- `docs/c4_diagrammen/structure.dsl` — Structurizr DSL (Context, Container, Deployment)
+- `poc/` — deploybare POC's
   - `poc-template/` — kopieerbaar template voor teamleden
-  - `poc-1/` — JWT horizontal scaling (uitgewerkt voorbeeld)
-  - `poc-2/` t/m `poc-5/` — leeg, per teamlid in te vullen
+  - `poc-1/` — OAuth login + eigen JWT (GitHub provider)
+  - `poc-2/` — Redis caching van reisgegevens
+  - `poc-3/` — RabbitMQ messaging binnen modulaire monoliet
+  - `poc-4/` — PostgreSQL concurrent budget updates (locking)
+  - `poc-5/` — nog in te vullen
 
-## Deployment testcluster
+## POC's draaien
 
-Docker Swarm: 3 managers + 2 workers.
-
-Elke POC deploybaar via:
+Elke POC heeft een eigen `README.md` met run-instructies. De meeste POC's draaien op Docker Swarm:
 
 ```bash
 docker stack deploy -f poc.yaml poc
 ```
+
+Uitzondering: POC 3 draait via Docker Compose (`docker compose up`).
 
 ## Team
 

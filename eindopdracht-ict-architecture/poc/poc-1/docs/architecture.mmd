@@ -1,6 +1,10 @@
 flowchart LR
     Browser["Browser<br/>JWT in localStorage"]
-    App["poc1-app<br/>Node + Express<br/>(.env: client_id, client_secret, jwt_secret)"]
+
+    subgraph Swarm["Docker Swarm"]
+        App["poc1-app<br/>Node + Express<br/>env: client_id, client_secret, jwt_secret"]
+    end
+
     GH["GitHub OAuth<br/>/authorize  /access_token  /user"]
 
     Browser -- "/login, /callback, /me" --> App
