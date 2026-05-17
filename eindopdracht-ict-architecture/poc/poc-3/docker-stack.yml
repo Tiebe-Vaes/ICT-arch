@@ -1,0 +1,76 @@
+version: "3.9"
+
+services:
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - target: 5672
+        published: 5672
+        protocol: tcp
+        mode: ingress
+      - target: 15672
+        published: 15672
+        protocol: tcp
+        mode: ingress
+    networks:
+      poc3-net:
+        aliases:
+          - rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+
+  trip-api:
+    image: poc3-rabbitmq-app:latest
+    command: npm run api
+    environment:
+      RABBITMQ_URL: amqp://rabbitmq:5672
+      PORT: 8080
+    ports:
+      - target: 8080
+        published: 8080
+        protocol: tcp
+        mode: ingress
+    networks:
+      - poc3-net
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+
+  notification-worker:
+    image: poc3-rabbitmq-app:latest
+    command: npm run notification-worker
+    environment:
+      RABBITMQ_URL: amqp://rabbitmq:5672
+    networks:
+      - poc3-net
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+
+  audit-worker:
+    image: poc3-rabbitmq-app:latest
+    command: npm run audit-worker
+    environment:
+      RABBITMQ_URL: amqp://rabbitmq:5672
+    networks:
+      - poc3-net
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+
+networks:
+  poc3-net:
+    driver: overlay
