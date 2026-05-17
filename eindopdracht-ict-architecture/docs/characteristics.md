@@ -1,6 +1,6 @@
 # Karakteristieken
 
-Top 7 quality attributes voor de applicatie.
+7 quality attributes voor de applicatie.
 
 ## 1. Availability
 

@@ -4,7 +4,7 @@ Formaat: MADR 3.0. Referentie: https://adr.github.io/madr/
 
 ## Status
 
-Proposed
+Accepted
 
 ## Context and Problem Statement
 

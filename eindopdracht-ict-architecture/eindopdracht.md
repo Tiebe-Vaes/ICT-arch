@@ -117,7 +117,7 @@ Deze componenten zijn logisch, niet fysiek. De mapping naar deploybare units (mo
 
 ## 3. ADR-001 — Architecturale stijl
 
-Status: Proposed. Formaat: [MADR 3.0](https://adr.github.io/madr/). Lokale template: [`docs/adr/template.md`](docs/adr/template.md). Volledige ADR: [`docs/adr/ADR-001-architecture-style.md`](docs/adr/ADR-001-architecture-style.md).
+Status: Accepted. Formaat: [MADR 3.0](https://adr.github.io/madr/). Lokale template: [`docs/adr/template.md`](docs/adr/template.md). Volledige ADR: [`docs/adr/ADR-001-architecture-style.md`](docs/adr/ADR-001-architecture-style.md).
 
 ### 3.1 Beslissing
 
@@ -151,11 +151,11 @@ Vijf bijkomende ADR's voor de belangrijkste beslissingen. Volledige inhoud per A
 
 | ADR | Onderwerp | Status | Gekoppelde POC |
 |---|---|---|---|
-| [ADR-002](docs/adr/ADR-002-caching.md) | Caching van externe reisgegevens (Redis) | Draft | POC 2 |
-| [ADR-003](docs/adr/ADR-003-authentication.md) | Authenticatie (OAuth2 + eigen JWT) | Proposed | POC 1 |
-| [ADR-004](docs/adr/ADR-004-database.md) | Database en concurrency-strategie (PostgreSQL) | Draft | POC 4 |
-| [ADR-005](docs/adr/ADR-005-messaging-system.md) | Messaging binnen modulaire monoliet (RabbitMQ) | Proposed | POC 3 |
-| [ADR-006](docs/adr/ADR-006-poc5.md) | Onderwerp POC 5 | Draft | POC 5 |
+| [ADR-002](docs/adr/ADR-002-caching.md) | Caching van externe reisgegevens (Redis) | Accepted | POC 2 |
+| [ADR-003](docs/adr/ADR-003-authentication.md) | Authenticatie (OAuth2 + eigen JWT) | Accepted | POC 1 |
+| [ADR-004](docs/adr/ADR-004-database.md) | Database en concurrency-strategie (PostgreSQL) | Accepted | POC 4 |
+| [ADR-005](docs/adr/ADR-005-messaging-system.md) | Messaging binnen modulaire monoliet (RabbitMQ) | Accepted | POC 3 |
+| [ADR-006](docs/adr/ADR-006-externe-integratie.md) | Externe integratie (adapter + circuit breaker) | Accepted | POC 5 |
 
 ---
 
@@ -177,66 +177,91 @@ Modellering volgens het C4-model met Structurizr DSL. De DSL-broncode staat hier
 
 ### 5.4 Structurizr DSL
 
+Volledige DSL: [`docs/c4_diagrammen/structure.dsl`](docs/c4_diagrammen/structure.dsl).
+
 ```dsl
 workspace "Travel Planning App" "ICT Architecture Assignment" {
 
     model {
         # Actors
-        user = person "Traveler" "Plans and shares trips"
-        friend = person "Friend" "Views shared itineraries"
+        traveler = person "Traveler" "Plant trips, beheert budget, nodigt vrienden uit"
+        admin = person "Admin" "Modereert gebruikers en trips"
 
         # External systems
-        hotelApi = softwareSystem "Hotel Booking API" "External hotel provider" "External System"
-        travelAgency = softwareSystem "Travel Agency API" "External travel services" "External System"
+        oauthProvider = softwareSystem "OAuth Provider (GitHub)" "Externe identity provider" "External System"
+        hotelApi = softwareSystem "Hotel Booking API" "Externe hotelprovider (bv. Booking.com)" "External System"
+        travelAgency = softwareSystem "Travel Agency API" "Externe vlucht-/reisprovider" "External System"
+        paymentProvider = softwareSystem "Payment Provider" "Externe betaalprovider" "External System"
 
-        # Your system
-        travelApp = softwareSystem "Travel Planning System" "Core application" {
-            webApp = container "Web Frontend" "User interface" "React"
-            apiGateway = container "API Gateway" "Routes requests, handles auth" "Node.js"
-            tripService = container "Trip Service" "Manages trips and itineraries" "Java/Spring"
-            budgetService = container "Budget Service" "Tracks expenses and budgets" "Java/Spring"
-            sharingService = container "Sharing Service" "Friend invites and permissions" "Java/Spring"
-            integrationService = container "Integration Service" "Talks to external APIs" "Java/Spring"
-            database = container "Database" "Stores trip data" "PostgreSQL" "Database"
-            cache = container "Cache" "Speeds up searches" "Redis" "Database"
+        # Eigen systeem — modulaire monoliet (ADR-001)
+        travelApp = softwareSystem "Travel Planning System" "Plannen en delen van reizen met vrienden" {
+            webApp = container "Web Frontend" "SPA: trips, budget, planning UI" "React"
+
+            backend = container "Backend (Modulaire Monoliet)" "Bevat modules User&Auth, Trip, Planning, Budget, Integration, Notification, Audit. Eén deploybare unit." "Node.js / Express" {
+                modAuth        = component "User & Auth"        "OAuth-login, JWT-uitgifte, rollen"
+                modTrip        = component "Trip Management"    "CRUD trips, deelnemers, uitnodigingen"
+                modPlanning    = component "Planning & Route"   "Activiteiten, routes, ETA"
+                modBudget      = component "Budget & Payment"   "Uitgaven, split, settle-up (ACID)"
+                modIntegration = component "Integration Layer"  "Adapters externe API's, circuit breaker"
+                modNotification= component "Notification"       "Push/email/in-app, event consumer"
+                modAudit       = component "Audit & Activity"   "Audit log consumer"
+            }
+
+            worker = container "Background Worker" "Consumeert events uit RabbitMQ (notification, audit). Zelfde codebase als backend." "Node.js"
+
+            postgres = container "PostgreSQL" "Trips, users, budget, audit log" "PostgreSQL 16" "Database"
+            redis    = container "Redis Cache" "TTL-cache van externe responses, sessies" "Redis 7" "Database"
+            rabbit   = container "RabbitMQ" "Event bus voor asynchrone side effects" "RabbitMQ 3" "Messaging"
         }
 
-        # Relationships — system context level
-        user -> travelApp "Plans trips using"
-        friend -> travelApp "Views shared trips via"
-        travelApp -> hotelApi "Fetches hotel availability"
-        travelApp -> travelAgency "Books travel services"
+        # System context
+        traveler -> travelApp "Plant en deelt reizen via"
+        admin    -> travelApp "Modereert via"
+        travelApp -> oauthProvider  "Login delegeren naar"
+        travelApp -> hotelApi       "Hotels zoeken/boeken"
+        travelApp -> travelAgency   "Vluchten/reizen zoeken"
+        travelApp -> paymentProvider "Betalingen afhandelen"
 
-        # Relationships — container level
-        user -> webApp "Uses"
-        webApp -> apiGateway "Calls"
-        apiGateway -> tripService "Routes to"
-        apiGateway -> budgetService "Routes to"
-        apiGateway -> sharingService "Routes to"
-        tripService -> database "Reads/writes"
-        tripService -> cache "Caches results"
-        integrationService -> hotelApi "Calls"
-        integrationService -> travelAgency "Calls"
-        tripService -> integrationService "Delegates external calls"
+        # Container relaties
+        traveler -> webApp "Gebruikt"
+        admin    -> webApp "Gebruikt"
+        webApp   -> backend "REST/JSON over HTTPS"
 
-        # Deployment
+        backend -> postgres "Leest/schrijft (ACID)"
+        backend -> redis    "Cached externe responses"
+        backend -> rabbit   "Publiceert domeinevents"
+        worker  -> rabbit   "Consumeert events"
+        worker  -> postgres "Schrijft notificaties / audit log"
+
+        modAuth        -> oauthProvider "OAuth2 authorization code"
+        modIntegration -> hotelApi      "HTTP via adapter"
+        modIntegration -> travelAgency  "HTTP via adapter"
+        modBudget      -> paymentProvider "HTTP via adapter"
+
+        # Deployment — testcluster: 3 managers + 2 workers
         deploymentEnvironment "Production" {
-            deploymentNode "Docker Swarm" {
-                deploymentNode "Manager Node" {
-                    containerInstance apiGateway
-                }
-                deploymentNode "Worker Node 1" {
-                    containerInstance tripService
-                    containerInstance budgetService
-                    containerInstance sharingService
-                    containerInstance integrationService
-                }
-                deploymentNode "Worker Node 2" {
+            deploymentNode "Docker Swarm Cluster" "5 nodes (3 managers, 2 workers)" {
+
+                deploymentNode "Manager 1" "Linux VM" {
+                    deploymentNode "Traefik" "reverse proxy" {
+                    }
                     containerInstance webApp
                 }
-                deploymentNode "Data Node" {
-                    containerInstance database
-                    containerInstance cache
+                deploymentNode "Manager 2" "Linux VM" {
+                    containerInstance backend
+                }
+                deploymentNode "Manager 3" "Linux VM" {
+                    containerInstance backend
+                    containerInstance worker
+                }
+
+                deploymentNode "Worker 1" "Linux VM — stateful" {
+                    containerInstance postgres
+                    containerInstance redis
+                }
+                deploymentNode "Worker 2" "Linux VM — messaging" {
+                    containerInstance rabbit
+                    containerInstance worker
                 }
             }
         }
@@ -249,6 +274,11 @@ workspace "Travel Planning App" "ICT Architecture Assignment" {
         }
 
         container travelApp "Containers" {
+            include *
+            autoLayout
+        }
+
+        component backend "BackendComponents" {
             include *
             autoLayout
         }
@@ -268,15 +298,22 @@ workspace "Travel Planning App" "ICT Architecture Assignment" {
                 background #999999
                 color #ffffff
             }
-            element "Database" {
-                shape Cylinder
-            }
             element "Software System" {
                 background #1168BD
                 color #ffffff
             }
             element "Container" {
                 background #438DD5
+                color #ffffff
+            }
+            element "Database" {
+                shape Cylinder
+                background #2E7C8F
+                color #ffffff
+            }
+            element "Messaging" {
+                shape Pipe
+                background #C97A2E
                 color #ffffff
             }
         }
@@ -291,7 +328,7 @@ workspace "Travel Planning App" "ICT Architecture Assignment" {
 Vijf POC's, één per teamlid. Elke POC is een aparte directory met eigen `README.md`. Opstartcommando vanuit de POC-directory:
 
 ```bash
-docker stack deploy -f poc.yaml poc
+docker stack deploy -c poc.yaml poc
 ```
 
 (Uitzondering: zie de README per POC indien een afwijkende start vereist is.)
@@ -302,4 +339,4 @@ docker stack deploy -f poc.yaml poc
 | 2 | Redis caching van reisgegevens | Performance, Availability, Resilience | [`poc/poc-2/`](poc/poc-2/) |
 | 3 | RabbitMQ messaging binnen modulaire monoliet | Fault Tolerance, Loose Coupling, Scalability | [`poc/poc-3/`](poc/poc-3/) |
 | 4 | PostgreSQL concurrent budget updates (FOR UPDATE) | Data Consistency, Fault Tolerance | [`poc/poc-4/`](poc/poc-4/) |
-| 5 | TODO | TODO | [`poc/poc-5/`](poc/poc-5/) |
+| 5 | Integration Layer — adapter + circuit breaker (mock hotel API) | Interoperability, Fault Tolerance | [`poc/poc-5/`](poc/poc-5/) |

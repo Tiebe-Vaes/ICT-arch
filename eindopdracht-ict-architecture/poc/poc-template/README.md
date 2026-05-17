@@ -21,7 +21,7 @@ npm install && npm start
 docker compose up --build
 
 # of Docker Swarm
-docker stack deploy -f poc.yaml poc
+docker stack deploy -c poc.yaml poc
 ```
 
 ## Demo
