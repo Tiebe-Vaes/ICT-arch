@@ -65,7 +65,7 @@ totdat het circuit na 3 fouten opent:
 docker service logs -f poc_integration-service
 
 # Blijf in een ander terminal aanroepen
-for i in $(seq 1 10); do curl -s http://localhost:5000/hotels?city=rome | jq .; sleep 1; done
+for i in $(seq 1 10); do curl -s http://localhost:5000/hotels?city=rome | python3 -m json.tool; sleep 1; done
 ```
 
 Verwacht: de eerste aanroepen slagen (intern wordt geretryed), daarna opent het circuit en falen requests direct met `"state": "OPEN"`.
@@ -76,7 +76,7 @@ Na 15 seconden gaat het circuit naar `HALF_OPEN` en stuurt het een probeaanroep 
 Als die slaagt, sluit het circuit weer. Volg dit live:
 
 ```bash
-watch -n 2 'curl -s http://localhost:5000/circuit | jq .'
+watch -n 2 'curl -s http://localhost:5000/circuit | python3 -m json.tool'
 ```
 
 ### Stap 4 — Totale uitval
