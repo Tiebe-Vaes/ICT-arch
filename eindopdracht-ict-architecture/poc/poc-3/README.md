@@ -56,7 +56,7 @@ poc-3/
 Ga naar de POC-folder:
 
 ```powershell
-cd eindopdracht-ict-architecture\poc\poc-3-docker-stack
+cd eindopdracht-ict-architecture\poc\poc-3
 ```
 
 Start/deploy alles:
