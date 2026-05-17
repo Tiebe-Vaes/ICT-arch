@@ -6,6 +6,16 @@ AP Hogeschool, 2e jaar Toegepaste Informatica.
 
 **Team:** 5 leden.
 
+| Naam | ADR | POC |
+|---|---|---|
+| Jamyang Tenzin | ADR-002 (Caching) | POC 2 (Redis) |
+| Tiebe Vaes | ADR-003 (Authenticatie) | POC 1 (OAuth + JWT) |
+| Talia Journée | ADR-005 (Messaging) | POC 3 (RabbitMQ) |
+| Neta Kiala | ADR-004 (Database) | POC 4 (PostgreSQL locking) |
+| Hoyin Man | ADR-006 (Externe integratie) | POC 5 (Adapter + circuit breaker) |
+
+ADR-001 (architecturale stijl) is gezamenlijk.
+
 ---
 
 ## Inhoudsopgave
@@ -55,63 +65,88 @@ De applicatie heeft duidelijke gebruikspieken (vakantieperiodes). Dit heeft een 
 
 ## 2. Logische componenten
 
-Bepaald via actor-action / workflow approach — vóór de keuze van een architecturale stijl.
+Bepaald via de actor-action approach, voor de keuze van een architecturale stijl. Componenten zijn geen services en staan los van enige implementatiebeslissing.
 
 ### 2.1 Actoren
 
-| Actor | Rol |
-|---|---|
-| Traveler | Eindgebruiker die deelneemt aan een trip |
-| Trip-owner | Traveler die de trip aanmaakt en beheert |
-| Admin | Beheerder van het platform |
-| Externe provider | Hotel-, vlucht- of payment-API (passieve actor) |
-| Background scheduler | Tijdgestuurde trigger (passieve actor) |
+- Gast: een niet-ingelogde bezoeker.
+- Reiziger: een geregistreerde gebruiker die reizen plant en deelt met anderen.
+- Groepsbeheerder: een reiziger met extra rechten binnen een specifieke reis.
+- System: automatische acties die zonder directe gebruikersinteractie plaatsvinden.
+- Extern systeem: een derde partij zoals een reisbureau, hotel of betalingsprovider.
 
-### 2.2 Actor-Action tabel
+### 2.2 Actor-action tabel
 
-| Actor | Actie | Component(en) |
+| Actor | Acties | Component |
 |---|---|---|
-| Traveler | Registreren / inloggen via externe provider | User & Auth |
-| Traveler | Eigen profiel beheren | User & Auth |
-| Trip-owner | Trip aanmaken, bewerken, verwijderen | Trip Management |
-| Trip-owner | Vrienden uitnodigen voor trip | Trip Management → Notification |
-| Traveler | Uitnodiging accepteren of weigeren | Trip Management |
-| Traveler | Activiteit toevoegen aan trip | Trip Management, Planning & Route |
-| Traveler | Route plannen tussen bestemmingen | Planning & Route, Integration Layer |
-| Traveler | Hotels en vluchten zoeken | Integration Layer (externe API's) |
-| Traveler | Boeking importeren | Integration Layer, Trip Management |
-| Traveler | Uitgave registreren | Budget & Payment |
-| Traveler | Budget splitsen tussen deelnemers | Budget & Payment |
-| Traveler | Settle-up bekijken en bevestigen | Budget & Payment |
-| Traveler | Notificaties ontvangen (push, email, in-app) | Notification |
-| Externe provider | Beschikbaarheid en prijzen leveren | Integration Layer |
-| Externe provider | Boeking bevestigen | Integration Layer |
-| Background scheduler | Herinneringen versturen (vertrek nadert) | Notification, Trip Management |
-| Background scheduler | Externe data herverversen (cache) | Integration Layer |
-| Admin | Gebruikers en trips modereren | User & Auth, Trip Management |
-| Admin | Audit logs raadplegen | Audit & Activity Log |
+| Gast | Registreren, inloggen | Gebruikersbeheer |
+| Reiziger | Profiel beheren | Gebruikersbeheer |
+| Reiziger | Reis bekijken | Reisbeheer |
+| Reiziger | Activiteit voorstellen, stemmen op activiteit | Activiteitenplanning |
+| Reiziger | Uitgave registreren, budgetoverzicht raadplegen | Budgetbeheer |
+| Reiziger | Betaling initiëren | Betalingen |
+| Groepsbeheerder | Reis aanmaken, bewerken, verwijderen | Reisbeheer |
+| Groepsbeheerder | Deelnemers uitnodigen en beheren | Reisbeheer |
+| Groepsbeheerder | Totaalbudget instellen | Budgetbeheer |
+| System | Externe prijzen en beschikbaarheid opvragen | Integratie |
+| System | Budget bijwerken na betalingsbevestiging | Budgetbeheer |
+| System | Notificatie versturen bij gebeurtenis | Notificatie |
+| Extern systeem | Prijzen en beschikbaarheid aanleveren | Integratie |
+| Extern systeem | Betalingsbevestiging aanleveren | Betalingen |
 
-### 2.3 Componenten en taken
+### 2.3 Takenoverzicht per component
 
-| # | Component | Verantwoordelijkheid |
-|---|---|---|
-| 1 | User & Auth | Identiteit, registratie, login via externe OAuth-provider, JWT-uitgifte, rollen, sessies |
-| 2 | Trip Management | CRUD trips, deelnemers, uitnodigingen, versiebeheer van het reisplan |
-| 3 | Planning & Route | Activiteiten plannen, routes berekenen, ETA's, multi-stop ordering |
-| 4 | Budget & Payment | Uitgaven registreren, split-logica, settle-up berekening, transacties |
-| 5 | Integration Layer (Anti-Corruption Layer) | Adapters naar externe API's (hotels, vluchten, payments), normalisatie, caching, retry |
-| 6 | Notification | Push, email, in-app notificaties; event-driven triggers |
-| 7 | Audit & Activity Log | Centraal vastleggen van wijzigingen en gevoelige acties |
+#### Gebruikersbeheer
 
-### 2.4 Cross-cutting concerns
+- Registratie van nieuwe gebruikers
+- Authenticatie (inloggen, uitloggen, wachtwoord herstellen)
+- Profielbeheer (naam, e-mail, voorkeuren)
+- Autorisatie: bepalen wat een gebruiker mag binnen een reis
 
-- API Gateway / BFF — entry point, routing, auth-validatie
-- Caching Layer (Redis) — hot data versnellen, externe responses bufferen
-- Background Jobs / Scheduler — periodieke triggers, outbox-publisher
-- Reporting & Analytics — afgeleide statistieken
-- Admin / Backoffice — moderatie-tooling
+#### Reisbeheer
 
-Deze componenten zijn logisch, niet fysiek. De mapping naar deploybare units (modules in een modulaire monoliet, of services bij microservices) gebeurt in ADR-001.
+- Aanmaken, bewerken en verwijderen van reizen
+- Instellen van reisdetails (bestemming, datums, beschrijving)
+- Uitnodigen van deelnemers via link of e-mail
+- Beheren van de ledenlijst (toevoegen, verwijderen, rollen toewijzen)
+- Overzicht van alle reizen van een gebruiker
+
+#### Activiteitenplanning
+
+- Voorstellen van activiteiten (naam, datum, locatie, beschrijving)
+- Stemmen op voorgestelde activiteiten
+- Definitief inplannen van activiteiten in een tijdlijn
+- Overzicht van de reisagenda
+
+#### Budgetbeheer
+
+- Instellen van een totaalbudget per reis
+- Registreren van individuele uitgaven door deelnemers
+- Automatisch berekenen van wie hoeveel verschuldigd is aan wie (splits)
+- Bewaken van het budgetplafond en signaleren bij overschrijding
+- Overzicht van alle uitgaven en openstaande bedragen per deelnemer
+- Budget bijwerken na ontvangst van een betalingsbevestiging
+
+#### Integratie
+
+- Opvragen van beschikbaarheid en prijzen bij hotels en reisbureaus
+- Vertalen van externe dataformaten naar interne domeinmodellen
+- Afhandelen van fouten en time-outs bij externe diensten
+
+#### Betalingen
+
+- Initiëren van betalingen via een externe betalingsprovider
+- Verwerken en valideren van betalingsbevestigingen
+- Doorgeven van bevestigde betalingen aan Budgetbeheer
+- Afhandelen van mislukte of geannuleerde betalingen
+
+#### Notificatie
+
+- Versturen van uitnodigingen voor een reis
+- Notificeren bij nieuwe activiteitsvoorstellen of wijzigingen
+- Waarschuwen bij budgetoverschrijding
+- Bevestigen van betalingen en uitgaven
+- Ondersteunen van meerdere kanalen (e-mail, in-app)
 
 ---
 
@@ -322,3 +357,5 @@ docker stack deploy -c poc.yaml poc
 | 3 | RabbitMQ messaging binnen modulaire monoliet | Fault Tolerance, Loose Coupling, Scalability | [`poc/poc-3/`](poc/poc-3/) |
 | 4 | PostgreSQL concurrent budget updates (FOR UPDATE) | Data Consistency, Fault Tolerance | [`poc/poc-4/`](poc/poc-4/) |
 | 5 | Integration Layer — adapter + circuit breaker (mock hotel API) | Interoperability, Fault Tolerance | [`poc/poc-5/`](poc/poc-5/) |
+
+POC 3 wijkt af van het standaard-commando: zie [`poc/poc-3/README.md`](poc/poc-3/README.md) (gebruikt `docker-stack.yml` en vereist eerst een image-build). POC 1 vereist een ingevuld `.env`-bestand met GitHub OAuth credentials. Docker Swarm bouwt geen images automatisch — `docker build` is altijd een aparte stap vóór `docker stack deploy`.
