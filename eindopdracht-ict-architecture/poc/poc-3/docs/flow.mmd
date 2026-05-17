@@ -1,0 +1,40 @@
+%%{init: {"theme": "base", "themeVariables": {"fontFamily": "Inter, Segoe UI, Arial", "primaryTextColor": "#172033", "lineColor": "#64748b", "actorBkg": "#eef2ff", "actorBorder": "#4f46e5", "activationBkgColor": "#f8fafc", "activationBorderColor": "#94a3b8", "noteBkgColor": "#fff7ed", "noteBorderColor": "#fb923c"}}}%%
+sequenceDiagram
+    autonumber
+    participant T as Tester / PowerShell
+    participant API as trip-api
+    participant Trip as Trip module
+    participant MQ as RabbitMQ
+    participant NW as notification-worker
+    participant AW as audit-worker
+    participant DLQ as notification.dead-letter
+
+    rect rgb(239, 246, 255)
+        Note over T,Trip: Synchronous part: the invitation command is handled immediately
+        T->>API: POST /trips/:tripId/invitations
+        API->>Trip: inviteMember(tripId, invitedUserId, invitedByUserId)
+        Trip-->>API: invitation + TripMemberInvited event
+    end
+
+    rect rgb(240, 253, 244)
+        Note over API,MQ: Asynchronous part starts when the event is published
+        API->>MQ: publish TripMemberInvited<br/>routing key: trip.member.invited
+        API-->>T: 202 Accepted
+        MQ-->>NW: route to notification.trip-events
+        MQ-->>AW: route to audit.events (#)
+        AW->>AW: write audit log
+        AW-->>MQ: ack
+    end
+
+    alt notification succeeds
+        NW->>NW: simulate notification
+        NW-->>MQ: ack
+    else notification fails
+        NW->>MQ: publish to notification.retry<br/>x-retry-count + 1
+        MQ-->>MQ: wait 5s using TTL
+        MQ-->>NW: redeliver event
+        loop max 3 retries
+            NW->>MQ: retry or ack
+        end
+        NW->>DLQ: publish notification.failed
+    end
