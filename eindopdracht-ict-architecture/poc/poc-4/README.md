@@ -7,6 +7,8 @@ PostgreSQL-transactie zonder expliciete locking leiden tot een lost update: de t
 overschrijft de wijziging van de eerste. Een SELECT ... FOR UPDATE voorkomt dit door de rij te
 vergrendelen totdat de eerste transactie afgerond is.
 
+![img.png](docs/img.png)
+
 **Quality attributes:**
 - Data Consistency
 - Fault Tolerance
@@ -24,14 +26,16 @@ vergrendelen totdat de eerste transactie afgerond is.
 ## Structuur
 
 ```
-poc-03-db-locking/
-  app/
-    index.js        -- simuleert gelijktijdige budget-updates
-    package.json
-  Dockerfile
-  init.sql          -- tabelstructuur en begindata
-  poc.yaml          -- Swarm stack
-  README.md
+poc-04-db-locking/
+├── app/
+│   ├── index.js
+│   └── package.json
+├── docs/
+│   └── img.png
+├── Dockerfile
+├── init.sql
+├── poc.yaml
+└── README.md
 ```
 
 ---
