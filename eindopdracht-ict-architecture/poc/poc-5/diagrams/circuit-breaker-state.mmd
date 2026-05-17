@@ -1,0 +1,40 @@
+---
+title: Circuit Breaker — Toestandsdiagram (BookingComAdapter)
+---
+stateDiagram-v2
+    direction LR
+
+    [*] --> CLOSED
+
+    CLOSED: CLOSED
+    CLOSED: Requests gaan door
+    CLOSED: failureCount = 0
+
+    OPEN: OPEN
+    OPEN: Requests direct geblokkeerd
+    OPEN: (fail fast — geen call naar provider)
+
+    HALF_OPEN: HALF_OPEN
+    HALF_OPEN: Eén proberequest toegestaan
+    HALF_OPEN: verdere requests geblokkeerd
+
+    CLOSED --> OPEN: failureCount ≥ 3<br/>(drempel bereikt)
+    OPEN --> HALF_OPEN: na 15s<br/>(recoveryTimeout verstreken)
+    HALF_OPEN --> CLOSED: probe slaagt<br/>recordSuccess()
+    HALF_OPEN --> OPEN: probe faalt<br/>recordFailure()
+    CLOSED --> CLOSED: succes<br/>failureCount = 0
+
+    note right of CLOSED
+        Normale werking.
+        Elke fout verhoogt failureCount.
+    end note
+
+    note right of OPEN
+        Fail fast — bespaart de provider
+        én het eigen latency-budget.
+    end note
+
+    note right of HALF_OPEN
+        Voorzichtige hersteltest
+        zonder volledige belasting.
+    end note

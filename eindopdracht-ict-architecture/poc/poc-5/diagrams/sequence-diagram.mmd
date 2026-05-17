@@ -1,0 +1,58 @@
+sequenceDiagram
+    autonumber
+    actor Client as Client
+    participant Facade as Facade<br/>(searchHotels)
+    participant Adapter as BookingComAdapter
+    participant CB as CircuitBreaker
+    participant API as Mock Hotel API<br/>(Booking.com)
+
+    Client->>Facade: GET /hotels?city=rome
+    Facade->>Adapter: searchHotels("rome")
+    Adapter->>CB: allowRequest()
+    CB-->>Adapter: true (CLOSED)
+
+    rect rgb(230, 245, 230)
+    Note over Adapter,API: Poging 1 — succespad
+    Adapter->>API: GET /hotels?city=rome
+    API-->>Adapter: 200 OK (ruwe Booking-JSON)
+    Adapter->>CB: recordSuccess()
+    Adapter->>Adapter: _translate(raw) → HotelResult[]
+    Adapter-->>Facade: HotelResult[]
+    Facade-->>Client: 200 OK (interne modellen + circuit-status)
+    end
+
+    Note over Client,API: ───── Faalscenario (FAILURE_MODE = "flaky" / "timeout" / "error") ─────
+
+    Client->>Facade: GET /hotels?city=rome
+    Facade->>Adapter: searchHotels("rome")
+    Adapter->>CB: allowRequest()
+    CB-->>Adapter: true
+
+    rect rgb(252, 232, 232)
+    Note over Adapter,API: Retry-lus met exponentiële backoff
+    Adapter->>API: Poging 1
+    API--xAdapter: timeout / 500
+    Adapter->>CB: recordFailure() (1/3)
+    Note right of Adapter: wacht 1s
+
+    Adapter->>API: Poging 2
+    API--xAdapter: timeout / 500
+    Adapter->>CB: recordFailure() (2/3)
+    Note right of Adapter: wacht 2s
+
+    Adapter->>API: Poging 3
+    API--xAdapter: timeout / 500
+    Adapter->>CB: recordFailure() (3/3) → OPEN
+    end
+
+    Adapter-->>Facade: Error: "All 3 attempts failed"
+    Facade-->>Client: 503 Service Unavailable<br/>(circuit: OPEN)
+
+    Note over Client,API: ───── Volgende request terwijl circuit OPEN is ─────
+
+    Client->>Facade: GET /hotels?city=rome
+    Facade->>Adapter: searchHotels("rome")
+    Adapter->>CB: allowRequest()
+    CB-->>Adapter: false (OPEN — fail fast)
+    Adapter-->>Facade: Error: "Circuit breaker is OPEN"
+    Facade-->>Client: 503 (geen HTTP-call naar provider)
