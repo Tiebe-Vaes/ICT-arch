@@ -6,6 +6,18 @@ User logt in via externe OAuth-provider (GitHub). Backend ontvangt authorization
 
 Quality attribute: **Confidentiality** (delegatie van authenticatie aan vertrouwde provider, geen wachtwoorden in de app).
 
+## Architectuur
+
+Browser → backend (Express) → GitHub OAuth. Backend signt een eigen JWT na succesvolle code-exchange en stuurt het terug naar de client.
+
+![Architectuur](docs/architecture.png)
+
+## Flow
+
+Authorization Code flow: login-redirect, consent bij GitHub, callback met `code`, server-side token-exchange, user-info ophalen, eigen JWT teruggeven, daarna `Bearer`-calls naar `/me`.
+
+![OAuth flow](docs/flow.png)
+
 ## OAuth provider
 
 GitHub OAuth (Authorization Code flow). Snelste setup, geen verification nodig voor POC.
