@@ -259,3 +259,9 @@ Voorbeeld:
   "correlationId": "req-abc"
 }
 ```
+
+## Referenties
+
+- Laigner, R., Kalinowski, M., et al. (2021). *Data management in microservices: state of the practice, challenges, and research directions.* *Proceedings of the VLDB Endowment*. https://arxiv.org/abs/2103.00170 — peer-reviewed survey die het dual-write-probleem en het outbox-pattern als oplossing analyseert; onderbouwt onze keuze voor het Transactional Outbox Pattern in plaats van directe publicatie naar RabbitMQ.
+- Štefanko, M., Chaloupka, O., & Rossi, B. (2019). *The Saga Pattern in a Reactive Microservices Environment.* ICSOFT / academia.edu. https://www.academia.edu/72653167/The_Saga_Pattern_in_a_Reactive_Microservices_Environment — peer-reviewed studie die saga-implementaties evalueert; onderbouwt onze keuze om kernlogica synchroon (ACID) te houden en alleen side effects via events af te handelen.
+- Limón, X., et al. (2022). *Enhancing Saga Pattern for Distributed Transactions within a Microservices Architecture.* *Applied Sciences*, 12(12), MDPI. https://www.mdpi.com/2076-3417/12/12/6242 — bespreekt isolation-tekortkomingen van pure saga en onderbouwt waarom transactionele kernlogica (zoals gedeeld budget) niet event-driven moet zijn.

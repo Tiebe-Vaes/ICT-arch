@@ -128,3 +128,8 @@ Negatieve gevolgen
 ## Validation
 
 POC 2 toont cache-miss, cache-hit en gracieus gedrag bij externe API-uitval.
+
+## Referenties
+
+- Nishtala, R. et al. (2013). *Scaling Memcache at Facebook.* USENIX NSDI. https://www.usenix.org/conference/nsdi13/technical-sessions/presentation/nishtala — productie-evidence dat een gedeelde in-memory cache-laag tussen app en backing store latency en backend-belasting drastisch verlaagt; rechtvaardigt onze keuze voor Redis boven in-memory per instance.
+- Yan, G., & Li, J. (2022). *Towards Latency Awareness for Content Delivery Network Caching.* USENIX ATC. https://www.usenix.org/conference/atc22/presentation/yan-gang — peer-reviewed empirische studie: latency-aware caching verlaagt p99-latency 5–15% afhankelijk van backend-RTT; onderbouwt onze latency- en availability-claim bij trage externe API's.

@@ -233,3 +233,11 @@ MySQL/MariaDB werd beschouwd als tweede keuze omdat het eveneens ACID-transactie
 - Persistentie getest via container-herstarts
 - p95 querylatency blijft onder 100 ms bij normale belasting
 - Heroverweging gepland na eerste productie-iteratie indien schaalvereisten toenemen
+
+---
+
+## Referenties
+
+- Ports, D. R. K., & Grittner, K. (2012). *Serializable Snapshot Isolation in PostgreSQL.* *Proceedings of the VLDB Endowment*, 5(12). https://dl.acm.org/doi/10.14778/2367502.2367523 — peer-reviewed paper over PostgreSQL's eerste productie-implementatie van SSI; onderbouwt onze keuze voor PostgreSQL boven MySQL/MariaDB voor scenario's met sterke consistency-eisen.
+- Zendaoui, F., & Hidouci, W. K. (2015). *Performance Evaluation of Serializable Snapshot Isolation in PostgreSQL.* IEEE Conf. https://ieeexplore.ieee.org/document/7244971/ — empirische evaluatie van SSI-performance onder verschillende concurrency-niveaus in PostgreSQL; onderbouwt de keuze om voor gevoelige budgetoperaties `SERIALIZABLE` te overwegen.
+- PostgreSQL Global Development Group. *PostgreSQL Documentation — Explicit Locking.* https://www.postgresql.org/docs/current/explicit-locking.html — normatieve documentatie voor `SELECT ... FOR UPDATE` semantiek en gedrag onder concurrency.

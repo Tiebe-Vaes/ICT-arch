@@ -119,3 +119,10 @@ Negatief:
 - POC 1 demonstreert de volledige flow: login → callback → eigen JWT → `/me`
 - Geen wachtwoorden in DB
 - p95 token-validatie onder 5 ms (HMAC-verify)
+
+## Referenties
+
+- Hardt, D. (Ed.) (2012). *RFC 6749 — The OAuth 2.0 Authorization Framework.* IETF. https://datatracker.ietf.org/doc/html/rfc6749 — normatieve specificatie van de Authorization Code flow die we gebruiken.
+- *RFC 9700 — Best Current Practice for OAuth 2.0 Security* (2025). IETF. https://datatracker.ietf.org/doc/rfc9700/ — actuele BCP; onderbouwt korte token-levensduur, refresh-token-rotatie en state-parameter.
+- Fett, D., Küsters, R., & Schmitz, G. (2016). *A Comprehensive Formal Security Analysis of OAuth 2.0.* ACM CCS. https://dl.acm.org/doi/10.1145/2976749.2978385 — peer-reviewed formele analyse die aantoont dat Authorization Code met correcte parameter-binding veilig is.
+- OWASP Foundation. *Authentication Cheat Sheet.* https://cheatsheetseries.owasp.org/cheatsheets/Authentication_Cheat_Sheet.html — beveelt expliciet aan om authenticatie te delegeren aan een externe IdP i.p.v. wachtwoorden zelf te beheren.

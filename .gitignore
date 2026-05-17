@@ -1,0 +1,63 @@
+# Secrets / env
+.env
+.env.*
+!.env.example
+*.secret
+*.secret.txt
+secret.txt
+secrets/
+*.pem
+*.key
+*.crt
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-store/
+
+# Build output
+dist/
+build/
+out/
+*.tsbuildinfo
+
+# Docker
+docker-compose.override.yml
+*.local.yml
+
+# Structurizr / C4 exports
+docs/c4/exports/
+docs/c4_diagrammen/exports/
+.structurizr/
+workspace.json
+
+# IDE / OS
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs / tmp
+*.log
+logs/
+tmp/
+.tmp/
+*.pid
+
+# Claude / AI tooling
+.claude/
+CLAUDE.md
+HANDOFF.md
+HANDOFF.*.md
+*.handoff.md
+project-context.md
+memory/
+.aider*
+.cursor/
+.continue/
+.claude
