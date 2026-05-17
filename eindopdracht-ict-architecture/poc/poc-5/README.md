@@ -25,7 +25,7 @@ docker build -t poc-integration-service ./integration-service
 Daarna deployen:
 
 ```bash
-docker stack deploy -f poc.yaml poc
+docker stack deploy -c poc.yaml poc
 ```
 
 Wacht ~5 seconden totdat beide services zijn opgestart en controleer daarna:
@@ -54,7 +54,7 @@ Verwacht: lijst van hotels + `"state": "CLOSED"` in het circuit-veld.
 Pas `poc.yaml` aan, zet `FAILURE_MODE: "flaky"` en herdeployer:
 
 ```bash
-docker stack deploy -f poc.yaml poc
+docker stack deploy -c poc.yaml poc
 ```
 
 Roep het endpoint meerdere keren aan. In de logs zijn retries zichtbaar,

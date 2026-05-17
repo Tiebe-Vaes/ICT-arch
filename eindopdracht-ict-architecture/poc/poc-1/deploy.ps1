@@ -18,7 +18,7 @@ Write-Host "Building image..."
 docker build -t poc1-app:latest .\app
 
 Write-Host "Deploying stack..."
-docker stack deploy -f poc.yaml poc
+docker stack deploy -c poc.yaml poc
 
 Write-Host ""
 Write-Host "Open http://localhost:8080"

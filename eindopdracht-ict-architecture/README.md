@@ -23,7 +23,7 @@ App-case: planning en delen van reizen met vrienden (budget, activiteiten, integ
 Elke POC heeft een eigen `README.md` met run-instructies. De meeste POC's draaien op Docker Swarm:
 
 ```bash
-docker stack deploy -f poc.yaml poc
+docker stack deploy -c poc.yaml poc
 ```
 
 Uitzondering: POC 3 draait via Docker Compose (`docker compose up`).

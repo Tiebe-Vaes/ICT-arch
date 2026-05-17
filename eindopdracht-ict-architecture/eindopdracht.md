@@ -291,7 +291,7 @@ workspace "Travel Planning App" "ICT Architecture Assignment" {
 Vijf POC's, één per teamlid. Elke POC is een aparte directory met eigen `README.md`. Opstartcommando vanuit de POC-directory:
 
 ```bash
-docker stack deploy -f poc.yaml poc
+docker stack deploy -c poc.yaml poc
 ```
 
 (Uitzondering: zie de README per POC indien een afwijkende start vereist is.)

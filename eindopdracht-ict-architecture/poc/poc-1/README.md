@@ -35,7 +35,7 @@ Bouw image en deploy op Docker Swarm:
 
 ```bash
 docker build -t poc1-app:latest ./app
-docker stack deploy -f poc.yaml poc
+docker stack deploy -c poc.yaml poc
 ```
 
 De stack leest `app/.env` rechtstreeks via `env_file`.

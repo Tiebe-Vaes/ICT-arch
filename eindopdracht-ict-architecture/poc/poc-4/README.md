@@ -51,7 +51,7 @@ docker build -t poc-04-app .
 Start de stack:
 
 ```bash
-docker stack deploy -f poc.yaml poc
+docker stack deploy -c poc.yaml poc
 ```
 
 Controleer of beide services draaien:
