@@ -26,7 +26,9 @@ app.get("/trip/:id", async (req, res) => {
 
   const data = await response.json();
 
-  await client.set(id, JSON.stringify(data));
+  await client.set(id, JSON.stringify(data), {
+    EX: 60,
+  });
 
   res.json(data);
 });
