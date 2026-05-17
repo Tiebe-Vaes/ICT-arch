@@ -31,7 +31,7 @@ Voor een lokale schooldemo is dit nog steeds eenvoudig, want Docker Desktop draa
 ## Structuur
 
 ```text
-poc-3-docker-stack/
+poc-3/
 ├── docker-stack.yml
 ├── deploy-stack.ps1
 ├── remove-stack.ps1
@@ -56,7 +56,7 @@ poc-3-docker-stack/
 Ga naar de POC-folder:
 
 ```powershell
-cd C:\Users\lycan\Desktop\ICT-arch\eindopdracht-ict-architecture\poc\poc-3-docker-stack
+cd eindopdracht-ict-architecture\poc\poc-3-docker-stack
 ```
 
 Start/deploy alles:
