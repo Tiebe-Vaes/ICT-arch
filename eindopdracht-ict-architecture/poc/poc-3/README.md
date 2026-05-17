@@ -285,6 +285,12 @@ Dit toont de scalability quality attribute: consumers kunnen onafhankelijk opges
 .\remove-stack.ps1
 ```
 
+Als PowerShell scripts blokkeert, gebruik dan:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\remove-stack.ps1
+```
+
 Of handmatig:
 
 ```powershell
