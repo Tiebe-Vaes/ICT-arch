@@ -1,0 +1,6 @@
+{
+  "name": "integration-service",
+  "dependencies": {
+    "express": "^5.2.1"
+  }
+}
