@@ -73,3 +73,9 @@ cons:
 ## Validation
 
 POC 5 — demonstreert hoe een adapter een externe hotel-API normaliseert naar één intern model, inclusief retry met exponentiële backoff en circuit breaking bij uitval van de provider.
+
+## Referenties
+
+- Montesi, F., & Weber, J. (2016). *Circuit Breakers, Discovery, and API Gateways in Microservices.* arXiv:1609.05830. https://arxiv.org/abs/1609.05830 — academische behandeling van circuit-breaker semantiek en effect op fault isolation; onderbouwt circuit breaking per externe provider.
+- Heorhiadi, V., et al. (2016). *Gremlin: Systematic Resilience Testing of Microservices.* IEEE ICDCS. https://ieeexplore.ieee.org/document/7536384 — peer-reviewed empirische validatie dat circuit breakers cascading failures bij externe-dependency-uitval voorkomen.
+- Bucchiarone, A., Dragoni, N., Dustdar, S., Larsen, S. T., & Mazzara, M. (2018). *From Monolithic to Microservices: An Experience Report from the Banking Domain.* *IEEE Software*, 35(3). https://ieeexplore.ieee.org/document/8354433 — peer-reviewed industrieel verslag dat anti-corruption layers en adapters aanbeveelt als ontkoppeling tussen modern systeem en heterogene externe systemen.

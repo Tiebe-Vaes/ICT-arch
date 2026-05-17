@@ -99,8 +99,17 @@ Met een groter team en groter budget zou de keuze van bij dag één microservice
 - [ADR-003](ADR-003-authentication.md) — Authenticatie
 - [ADR-004](ADR-004-database.md) — Database
 - [ADR-005](ADR-005-messaging-system.md) — Messaging
-- [ADR-006](ADR-006-poc5.md) — Onderwerp POC 5
+- [ADR-006](ADR-006-externe-integratie.md) — Externe integratie
 
 ## Validatie
 
 We hertoetsen deze beslissing op het einde van de eerste productie-iteratie. Concreet bekijken we of de module-boundary-tests blijven slagen, of de deploy-tijd onder vijf minuten blijft, of de p95 latency van kritieke endpoints onder driehonderd milliseconde zit, en of er na drie maanden geen circulaire afhankelijkheden tussen modules zijn ontstaan. Indien een module structureel piek-load veroorzaakt of een eigen schaalprofiel nodig heeft, bekijken we afsplitsing naar een service.
+
+## Referenties
+
+- Su, R., & Li, X. (2024). _Modular Monolith: Is This the Trend in Software Architecture?_ In _Proc. 1st Int. Workshop on New Trends in Software Architecture (NTSA)_, ACM. https://dl.acm.org/doi/10.1145/3643657.3643911 — grijze-literatuur review van 64 studies; bevestigt dat modulaire monoliet voordelen van monoliet en microservices combineert en een migratiepad biedt.
+- _Modular Monolith Architecture in Cloud Environments: A Systematic Literature Review_ (2025). _Future Internet_, 17(11), 496. MDPI. https://www.mdpi.com/1999-5903/17/11/496 — SLR identificeert adoption drivers (vereenvoudigde deployment, maintainability, lagere orchestration-overhead) die overeenkomen met onze drivers.
+- Blinowski, G., Ojdowska, A., & Przybyłek, A. (2022). _Monolithic vs. Microservice Architecture: A Performance and Scalability Evaluation._ _IEEE Access_. https://ieeexplore.ieee.org/document/9717259/ — empirische meting: monoliet ~6% hogere throughput onder concurrency, geen significant verschil in load. Onderbouwt dat microservices voor onze verwachte load geen performance-winst opleveren.
+- Fritzsch, J., Schmid, T., & Wagner, S. (2019). _Microservices Migration in Industry: Intentions, Strategies, and Challenges._ IEEE ICSME. https://arxiv.org/pdf/1906.04702 — interview-studie: gebrek aan microservices-expertise wordt even vaak genoemd als decompositie-uitdagingen, wat past bij ons team van 5 zonder dedicated DevOps.
+- Capuano, F., & Muccini, H. (2022). _A Systematic Literature Review on Migration to Microservices: a Quality Attributes perspective._ IEEE/ACM ICSA-C. https://ieeexplore.ieee.org/document/9779831/ — documenteert migratie-uitdagingen die we vermijden door modulair-monoliet-first.
+- Fowler, M. (2015). _MonolithFirst._ https://martinfowler.com/bliki/MonolithFirst.html en _MicroservicePremium._ https://martinfowler.com/bliki/MicroservicePremium.html — autoriteitsbronnen voor de "monolith first"-strategie en de productiviteitskost van microservices bij kleine teams.
