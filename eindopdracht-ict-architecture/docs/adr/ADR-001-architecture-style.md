@@ -4,7 +4,7 @@ Formaat: [MADR 3.0](https://adr.github.io/madr/). Lokale template: [`template.md
 
 ## Status
 
-Proposed
+Accepted
 
 ## Context
 

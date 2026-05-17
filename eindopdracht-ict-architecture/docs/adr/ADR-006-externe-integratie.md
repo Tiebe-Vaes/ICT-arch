@@ -1,10 +1,10 @@
-# ADR-006 — <onderwerp POC 5>
+# ADR-006 — Externe integratie via adapterpatroon + circuit breaker
 
 Formaat: MADR 3.0. Referentie: https://adr.github.io/madr/
 
 ## Status
 
-Draft
+Accepted
 
 ## Context and Problem Statement
 
@@ -72,4 +72,4 @@ cons:
 
 ## Validation
 
-POC 5 — demonstreert hoe een adapterpatroon de  hotel-API's (met een verschillend dataformaat) normaliseert naar één intern model, inclusief circuit breaking bij uitval van één provider
+POC 5 — demonstreert hoe een adapter een externe hotel-API normaliseert naar één intern model, inclusief retry met exponentiële backoff en circuit breaking bij uitval van de provider.
